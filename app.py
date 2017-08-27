@@ -17,17 +17,12 @@ def request_stuff(season, events):
     event_list = soup.find_all('div', {'class': 'col-lg-3'})
     for event_for in event_list:
         event_id = str(event_for)
-        event_id = event_id[(event_id.find("event") + 12)
-                             :(event_id.find("event") + 15)]
+        event_id = event_id[(event_id.find("event") + 12):(event_id.find("event") + 15)]
         if event_id in events:
             pass
         else:
             link_tag = [a['href'] for a in event_for.find_all(
                 'a', href=True) if a.text.strip()][0]
-            # index = link_tag.find('"') +  1
-            # link = link_tag['href']
-            # index = link.find('"')
-            # link = link[:index]
 
             event_head = str(event_for.find_all('h3'))
             index = event_head.find(">") + 1
@@ -40,6 +35,7 @@ def request_stuff(season, events):
             event_date = event_date[index:]
             index = event_date.find("<")
             event_date = event_date[:index]
+
             print('- ' * 10)
             print(event_for)
             print('- ' * 10)
@@ -47,7 +43,16 @@ def request_stuff(season, events):
             index = event_loc.find(">") + 1
             event_loc = event_loc[index:]
             index = event_loc.find("<")
-            event_loc = event_loc[:index]
+            event_loc_city = event_loc[:index]
+
+            # This is for getting the state, I added +9 because after it was ending -
+            #- at "</span>, ". +9 just moves the pointer forward.
+            event_loc = event_loc[index + 9:]
+            index = event_loc.find(">") + 1
+            event_loc = event_loc[index:]
+            index = event_loc.find("<")
+            event_loc_state = event_loc[:index]
+            event_loc = event_loc_city + ", " + event_loc_state
 
             event = {}
             event["location"] = event_loc
