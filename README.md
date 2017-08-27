@@ -1,3 +1,10 @@
+# UPDATED BY Jaronoff97
+
+Hello all! I just updated this repo and thought it may be useful to share it!
+
+
+:Original Description:
+
 #Unofficial Major League Hacking API
 
 Welcome to the Unoffical MLH API. This is not the offical API used by MLH, but simply one I made at CodeDay Winter 2015.
