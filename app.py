@@ -1,29 +1,33 @@
 #!flask/bin/python
 from flask import Flask, jsonify
 from bs4 import BeautifulSoup
-import requests, time
+import requests
+import time
 import urllib
 import datetime
 
 app = Flask(__name__)
-year = str(datetime.date.today().year)
+year = str(datetime.date.today().year + 1)
+
 
 def request_stuff(season, events):
     mlh_url = "https://mlh.io/seasons/%s/events" % (season)
     mlh_html = requests.get(mlh_url)
     soup = BeautifulSoup(mlh_html.content)
-    event_list = soup.find_all('div', {'class':'col-lg-3'})
+    event_list = soup.find_all('div', {'class': 'col-lg-3'})
     for event_for in event_list:
         event_id = str(event_for)
-        event_id = event_id[(event_id.find("event")+12):(event_id.find("event")+15)]
+        event_id = event_id[(event_id.find("event") + 12)
+                             :(event_id.find("event") + 15)]
         if event_id in events:
             pass
         else:
-            link_tag = str(event_for.find_all('a'))
-            index = link_tag.find('"') +  1
-            link = link_tag[index:]
-            index = link.find('"')
-            link = link[:index]
+            link_tag = [a['href'] for a in event_for.find_all(
+                'a', href=True) if a.text.strip()][0]
+            # index = link_tag.find('"') +  1
+            # link = link_tag['href']
+            # index = link.find('"')
+            # link = link[:index]
 
             event_head = str(event_for.find_all('h3'))
             index = event_head.find(">") + 1
@@ -36,8 +40,10 @@ def request_stuff(season, events):
             event_date = event_date[index:]
             index = event_date.find("<")
             event_date = event_date[:index]
-
-            event_loc = str(event_for.find_all('p')[1])
+            print('- ' * 10)
+            print(event_for)
+            print('- ' * 10)
+            event_loc = str(event_for.find_all('span')[1])
             index = event_loc.find(">") + 1
             event_loc = event_loc[index:]
             index = event_loc.find("<")
@@ -47,18 +53,18 @@ def request_stuff(season, events):
             event["location"] = event_loc
             event["date"] = event_date
             event["name"] = event_head
-            event["link"] = link
+            event["link"] = link_tag
             event["id"] = event_id
             events[event_head] = event
-    
+
 
 @app.route('/')
 def index():
     us_event = {}
-    request_stuff("s" + year, us_event)
+    request_stuff("na-" + year, us_event)
     eu_event = {}
-    request_stuff("s"+year+"-eu", eu_event)
-    event_all = {"us_event":us_event,"eu_event":eu_event}
+    request_stuff("na-" + year + "-eu", eu_event)
+    event_all = {"us_event": us_event, "eu_event": eu_event}
     return jsonify(event_all)
 
 
@@ -71,12 +77,13 @@ def select_season(mlh_season):
         # time to wait until refresh
         time.sleep(1800)
 
+
 @app.route('/event/<string:mlh_event>/')
 def search_event(mlh_event):
     us_event = {}
-    request_stuff("s"+year, us_event)
+    request_stuff("s" + year, us_event)
     eu_event = {}
-    request_stuff("s"+year+"-eu", eu_event)
+    request_stuff("s" + year + "-eu", eu_event)
     for evnt in us_event:
         if urllib.unquote(mlh_event.lower()) == evnt.lower():
             return jsonify(us_event[evnt])
@@ -85,13 +92,13 @@ def search_event(mlh_event):
                 if urllib.unquote(mlh_event.lower()) == i.lower():
                     return jsonify(eu_event[i])
 
-@app.route('/search/<string:mlh_event>/<string:key_>/')
 
+@app.route('/search/<string:mlh_event>/<string:key_>/')
 def search_by_key(mlh_event, key_):
     us_event = {}
-    request_stuff("s"+year, us_event)
+    request_stuff("s" + year, us_event)
     eu_event = {}
-    request_stuff("s"+year+"-eu", eu_event)
+    request_stuff("s" + year + "-eu", eu_event)
     for evnt in us_event:
         if urllib.unquote(mlh_event.lower()) == evnt.lower():
             return us_event[evnt][key_]
@@ -102,5 +109,4 @@ def search_by_key(mlh_event, key_):
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=50981
-    )
+    app.run(debug=True, port=50981)
